@@ -34,12 +34,52 @@ coef_df=pd.DataFrame({'Word':w,'Coefficient':coef})
 coef_df=coef_df.sort_values(['Coefficient','Word'],ascending=False)
 
 
-def text_fit(X,y,nlp_model,ml_model):
-    X_c=nlp.fit_transform(X)
+def text_fit(X,y,nlp_model,ml_model,coef_show=1):
+    X_c=nlp_model.fit_transform(X)
     print('features:{}'.format(X_c.shape[1]))
     X_train,X_test,y_train,y_test=train_test_split(X_c,y)
     ml=ml_model.fit(X_test,y_test)
     acc=ml.score(X_test,y_test)
     print(acc)
     
-    w=c.get_feature_names()
+    if coef_show == 1:
+        w=c.get_feature_names()
+        coef=ml.coef_.tolist()[0]
+        coef_df=pd.DataFrame({'Word':w,'Coefficient':coef})
+        coef_df=coef_df.sort_values(['Coefficient','Word'],ascending=False)
+        print("\n")
+        print("Top 20 positive words: ")
+        print(coef_df.head(20))
+        print("\n")
+        print("Top 20 Negative Words: ")
+        print(coef_df.tail(20))
+
+from sklearn.feature_extraction.text import CountVectorizer
+c=CountVectorizer(stop_words="english")
+from sklearn.linear_model import LogisticRegression
+
+
+from sklearn.metrics import confusion_matrix,accuracy_score
+def predict(X,y,nlp_model,ml_model):
+    X_c=nlp_model.fit_transform(X)
+    X_train,X_test,y_train,y_test=train_test_split(X_c,y)
+    ml=ml_model.fit(X_test,y_test)
+    predictions=ml.predict(X_test)
+    cm=confusion_matrix(predictions,y_test)
+    print(cm)
+    acc=accuracy_score(predictions,y_test)
+    print(acc)
+    
+    
+c=CountVectorizer()
+lr=LogisticRegression()
+from sklearn.dummy import DummyClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+tfidf=TfidfVectorizer(stop_words="english")
+data=df[df['Score']==5]
+data2=data[data['%upvote'].isin(['80-100%', '60-80%', '20-40%', '0-20%'])]
+X=data2['Text']
+y_dict={'80-100%':1, '60-80%':1, '20-40%':0, '0-20%':0}
+y=data['%upvote'].map(y_dict)
+tf=TfidfVectorizer()
+X_c=tf.fit_transform(X)
